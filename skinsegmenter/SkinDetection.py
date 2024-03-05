@@ -2,20 +2,49 @@ import copy
 from PIL import Image
 import os
 import numpy as np
-import re
-import torch
 import cv2
 from ultralytics import YOLO
-import time
+import gdown
 
 class SkinDetection:
-    def __init__(self, device="cpu"):
+    def __init__(self, 
+                 skin_seg_ckpt_path=os.path.join(os.getcwd(), "weights", "skin_model.pt"), 
+                 yolo_seg_ckpt_path=os.path.join(os.getcwd(), "weights", "yolov8l-seg.pt"), 
+                 device="cpu",
+                 skin_threshold=0.1, 
+                 segmentation_confidence=0.5
+                 ):
         self._device = device
-        self._skin_model=  YOLO(r"C:\Users\ASUS\Desktop\github_projects\skinseg\weights\SkinModel.pt")
-        self._seg_model = YOLO(r"C:\Users\ASUS\Desktop\github_projects\skinseg\weights\yolov8l-seg.pt")
+        self._skin_threshold = skin_threshold
+        self._segmentation_confidence = segmentation_confidence
 
-        self.skinThr = 0.1
-        self.confidenceSeg = 0.5
+        
+        self._skin_seg_ckpt_path = skin_seg_ckpt_path
+        self._yolo_seg_ckpt_path = yolo_seg_ckpt_path
+
+        
+        os.makedirs(os.path.join(os.getcwd(), "weights"), exist_ok=True)
+
+        if not(os.path.isfile(self._skin_seg_ckpt_path)):
+            print("The skin_seg_ckpt_path is set to a non-existent path. Downloading the model...")
+            gdown.download(
+                        "https://drive.google.com/uc?id=1vyARXVlVpkVth9w73mzHbSE9EtopQMe0", 
+                        self._skin_seg_ckpt_path, 
+                        quiet=False
+                        )
+            
+        if not(os.path.isfile(self._yolo_seg_ckpt_path)):
+            print("The  is yolo_seg_ckpt_path set to a non-existent path. Downloading the model...")
+            gdown.download(
+                        "https://drive.google.com/uc?id=1kv2gOSlRb4COl9sFYVYvil8DlyTMt4ig", 
+                        self._yolo_seg_ckpt_path, 
+                        quiet=False
+                        
+                        )
+
+
+        self._skin_model=  YOLO(self._skin_seg_ckpt_path)
+        self._seg_model = YOLO(self._yolo_seg_ckpt_path)
 
     def _merge_masks(self, masks, image_shape):
         merged_mask = np.zeros(image_shape, dtype=np.uint8)
@@ -26,8 +55,8 @@ class SkinDetection:
         return (merged_mask > 0).astype(np.uint8)
 
     def _get_prediction(self, img):
-        predskin = self._skin_model.predict(source=img, conf=self.skinThr)
-        pred = self._seg_model.predict(source=img, conf=self.confidenceSeg)
+        predskin = self._skin_model.predict(source=img, conf=self._skin_threshold, verbose=False)
+        pred = self._seg_model.predict(source=img, conf=self._segmentation_confidence, verbose=False)
 
         masksSk = None
         if len(predskin[0]) > 0:
