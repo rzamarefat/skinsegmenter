@@ -93,16 +93,15 @@ class SkinDetection:
     
     def segment(self,image):
         FinalDict = []
-        HumanMask  = self._do_seg(image)
-        if len(HumanMask) > 0: 
-            for idx, (maskCrop, imgCrop, skinCrop) in enumerate(HumanMask):
-                imgCrop_real = copy.deepcopy(imgCrop)
+        human_masks  = self._do_seg(image)
+        if len(human_masks) > 0: 
+            for idx, (maskCrop, imgCrop, skinCrop) in enumerate(human_masks):
                 maskCrop = maskCrop>100
                 maskCrop = maskCrop.astype(np.uint8)  # Convert to uint8
                 maskCrop = maskCrop * 255
                 OutputImage = cv2.bitwise_and(skinCrop, maskCrop)
 
-                cv2.imwrite(f"SSSSSSSSS__{idx}.png", OutputImage)
+                print("OutputImage.shape", OutputImage.shape)
                 
 
                 # FinalDict.append({"ImgCrop":imgCrop_real, "PersentSkin":PersentSkin,"SkinMask":OutputImage})
