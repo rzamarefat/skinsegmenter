@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 from ultralytics import YOLO
 import gdown
+from PIL import Image
 
 class SkinDetection:
     def __init__(self, 
@@ -41,9 +42,12 @@ class SkinDetection:
                         
                         )
 
-
-        self._skin_model=  YOLO(self._skin_seg_ckpt_path)
-        self._seg_model = YOLO(self._yolo_seg_ckpt_path)
+        try:
+            self._skin_model=  YOLO(self._skin_seg_ckpt_path)
+            self._seg_model = YOLO(self._yolo_seg_ckpt_path)
+        except Exception as e:
+            print(e)
+            exit()
 
     def _merge_masks(self, masks, image_shape):
         merged_mask = np.zeros(image_shape, dtype=np.uint8)
@@ -90,27 +94,30 @@ class SkinDetection:
 
     def _apply_overlay(self, original_image, grayscale_masks, color=(0, 255, 0)):
         image_bgr = cv2.cvtColor(original_image, cv2.COLOR_RGB2BGR)
-    
-        # Iterate over grayscale masks and apply overlay
         for mask in grayscale_masks:
-            # Convert mask to 3-channel image
             mask_rgb = cv2.cvtColor(mask, cv2.COLOR_GRAY2RGB)
-            
-            # Apply overlay where mask is white
             overlay = np.where(mask_rgb == 255, color, image_bgr)
-            
-            # Convert overlay to the same data type as original image
             overlay = overlay.astype(image_bgr.dtype)
-            
-            # Blend overlay with original image
             image_bgr = cv2.addWeighted(overlay, 0.5, image_bgr, 0.5, 0)
 
-        # Convert back to RGB format
         result_image = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
         
         return result_image
     
-    def segment(self, image):
+    def segment(self, input_):
+        
+        try:
+            if isinstance(input_, np.ndarray):
+                image = input_
+            elif isinstance(input_, Image.Image):
+                image = np.array(input_)
+                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            else:
+                image = cv2.imread(input_)
+        except Exception as e:
+            print(e)
+            exit()
+
         final_result = {
             "instance_masks": [],
             "integrated_mask": None,
@@ -136,18 +143,3 @@ class SkinDetection:
             return final_result
         else:
             return None
-
-    def count_pixels_with_value(self,image, value):
-        count = 0
-        for row in image:
-            for pixel in row:
-                if pixel == value:
-                    count += 1
-        return count
-
-if __name__ =="__main__":
-    dir_ = os.getcwd()
-    self_ = SkinDetectionClass()## 384
-    img_path = dir_ + "/Im/3.png"
-    im = cv2.imread(img_path)
-    self_.inferenceModel(Im = im)
