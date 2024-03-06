@@ -102,27 +102,22 @@ class SkinDetection:
                 maskCrop = maskCrop * 255
                 OutputImage = cv2.bitwise_and(skinCrop, maskCrop)
 
-                # erode_kernel = np.ones((9, 9), np.uint8)
-                # maskCrop = cv2.erode(maskCrop, erode_kernel, iterations=1)
-                NumHuman = self.count_pixels_with_value(maskCrop,255)
-                NumSkin  = self.count_pixels_with_value(OutputImage, 255)
-                if (NumSkin!=0 and NumHuman!=0):
-                    PersentSkin = NumSkin / NumHuman
-                else:
-                    PersentSkin = 0
+                cv2.imwrite(f"SSSSSSSSS__{idx}.png", OutputImage)
+                
 
                 # FinalDict.append({"ImgCrop":imgCrop_real, "PersentSkin":PersentSkin,"SkinMask":OutputImage})
-                FinalDict.append({"realImgCrop": imgCrop_real, "skinPercent": np.round(100*PersentSkin), "skinMask": OutputImage})
+                # FinalDict.append({"realImgCrop": imgCrop_real, "skinPercent": np.round(100*PersentSkin), "skinMask": OutputImage})
 
                 
                 # mask_3channel = np.repeat(OutputImage[:, :, np.newaxis], 3, axis=2)
                 # output_ = cv2.bitwise_and(imgCrop_real, mask_3channel)
                 # cv2.imwrite("OutImage.jpg",output_)
                 # print("PersentSkin: %", np.round(100*PersentSkin))
+                    
 
             return FinalDict
         else:
-            return [{"realImgCrop": None, "skinPercent": None, "skinMask": None}]
+            return None
 
     def count_pixels_with_value(self,image, value):
         count = 0
