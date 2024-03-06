@@ -1,5 +1,4 @@
 import copy
-from PIL import Image
 import os
 import numpy as np
 import cv2
@@ -77,44 +76,64 @@ class SkinDetection:
         dim_asl = img_real.shape[0:2]
         masks, boxes, pred_cls, ClassName, maskSk = self._get_prediction(img_real)
         merged_mask = self._merge_masks(maskSk, dim_asl)
+        integrated_mask = (merged_mask*255).astype(np.uint8)
+
         cropped_masks = []
         for i in range(len(boxes)):
             if ClassName[pred_cls[i]] in ['person']:
                 mask = masks[i, :, :]
                 mask = cv2.resize(mask, (dim_asl[1], dim_asl[0]), interpolation=cv2.INTER_AREA)
-                x1, y1, x2, y2 = boxes[i]
-                x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
-                cropped_mask = (mask[y1:y2, x1:x2]*255).astype(np.uint8)
-                cropped_img = img[y1:y2, x1:x2]
-                skinIm = (merged_mask[y1:y2, x1:x2]*255).astype(np.uint8)
-                cropped_masks.append([cropped_mask, cropped_img, skinIm])
+                cropped_mask = (mask*255).astype(np.uint8)
+                cropped_masks.append(cropped_mask)
 
-        return cropped_masks
+        return integrated_mask, cropped_masks
+
+    def _apply_overlay(self, original_image, grayscale_masks, color=(0, 255, 0)):
+        image_bgr = cv2.cvtColor(original_image, cv2.COLOR_RGB2BGR)
     
-    def segment(self,image):
-        FinalDict = []
-        human_masks  = self._do_seg(image)
-        if len(human_masks) > 0: 
-            for idx, (maskCrop, imgCrop, skinCrop) in enumerate(human_masks):
-                maskCrop = maskCrop>100
-                maskCrop = maskCrop.astype(np.uint8)  # Convert to uint8
-                maskCrop = maskCrop * 255
-                OutputImage = cv2.bitwise_and(skinCrop, maskCrop)
+        # Iterate over grayscale masks and apply overlay
+        for mask in grayscale_masks:
+            # Convert mask to 3-channel image
+            mask_rgb = cv2.cvtColor(mask, cv2.COLOR_GRAY2RGB)
+            
+            # Apply overlay where mask is white
+            overlay = np.where(mask_rgb == 255, color, image_bgr)
+            
+            # Convert overlay to the same data type as original image
+            overlay = overlay.astype(image_bgr.dtype)
+            
+            # Blend overlay with original image
+            image_bgr = cv2.addWeighted(overlay, 0.5, image_bgr, 0.5, 0)
 
-                print("OutputImage.shape", OutputImage.shape)
-                
+        # Convert back to RGB format
+        result_image = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
+        
+        return result_image
+    
+    def segment(self, image):
+        final_result = {
+            "instance_masks": [],
+            "integrated_mask": None,
+            "visualized_image": None
+        }
 
-                # FinalDict.append({"ImgCrop":imgCrop_real, "PersentSkin":PersentSkin,"SkinMask":OutputImage})
-                # FinalDict.append({"realImgCrop": imgCrop_real, "skinPercent": np.round(100*PersentSkin), "skinMask": OutputImage})
+        integrated_mask, cropped_masks  = self._do_seg(image)
+        predicted_mask_instances = []
 
-                
-                # mask_3channel = np.repeat(OutputImage[:, :, np.newaxis], 3, axis=2)
-                # output_ = cv2.bitwise_and(imgCrop_real, mask_3channel)
-                # cv2.imwrite("OutImage.jpg",output_)
-                # print("PersentSkin: %", np.round(100*PersentSkin))
-                    
+        if len(cropped_masks) > 0: 
+            for idx, mask_crop in enumerate(cropped_masks):
+                mask_crop = mask_crop>100
+                mask_crop = mask_crop.astype(np.uint8)  # Convert to uint8
+                mask_crop = mask_crop * 255
+                final_instance_mask = cv2.bitwise_and(integrated_mask, mask_crop)
+                predicted_mask_instances.append(final_instance_mask)
 
-            return FinalDict
+            final_result["instance_masks"] = predicted_mask_instances
+            final_result["integrated_mask"] = integrated_mask
+
+            final_result["visualized_image"] = self._apply_overlay(image, predicted_mask_instances)
+
+            return final_result
         else:
             return None
 
