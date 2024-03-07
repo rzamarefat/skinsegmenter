@@ -31,7 +31,7 @@ input_ = Image.open(input_)
 
 # option #2
 input_ = "path/to/img.png"
-input_ = Image.open(input_)
+input_ = cv2.imread(input_)
 
 # option #3
 input_ = "path/to/img.png"
