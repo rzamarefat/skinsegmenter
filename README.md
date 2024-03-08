@@ -9,8 +9,8 @@
 </div>
 
 ### Sample Results
-![visualized_image](https://github.com/rzamarefat/skinsegmenter/assets/79300456/887c7f5f-f9d0-4ac1-8346-b87c6c2701c5)
-![visualized_image](https://github.com/rzamarefat/skinsegmenter/assets/79300456/c8b38beb-f80b-4b25-86ab-ed6734da4e7f)
+
+![skin drawio](https://github.com/rzamarefat/skinsegmenter/assets/79300456/9374f9a7-c66d-4b2c-9317-4c7ef01d5e07)
 
 ### Installation
 
