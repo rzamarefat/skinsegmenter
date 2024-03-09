@@ -5,7 +5,7 @@
   <h3>
     An easy to use and packaged tool for skin segmentation   
   </h3>
-    <a href="https://badge.fury.io/py/yolotext"><img src="https://badge.fury.io/py/yolotext.svg" alt="pypi version"></a>
+    <a href="https://badge.fury.io/py/skinsegmenter"><img src="https://badge.fury.io/py/yolotext.svg" alt="pypi version"></a>
 </div>
 
 ### Sample Results
@@ -15,7 +15,7 @@
 ### Installation
 
 ```
-pip install 
+pip install skinsegmenter
 ```
 
 
