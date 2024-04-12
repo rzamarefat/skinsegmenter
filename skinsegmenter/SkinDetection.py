@@ -58,8 +58,8 @@ class SkinDetection:
         return (merged_mask > 0).astype(np.uint8)
 
     def _get_prediction(self, img):
-        predskin = self._skin_model.predict(source=img, conf=self._skin_threshold, verbose=False)
-        pred = self._seg_model.predict(source=img, conf=self._segmentation_confidence, verbose=False)
+        predskin = self._skin_model.predict(source=img, conf=self._skin_threshold, retina_masks = True, verbose=False)
+        pred = self._seg_model.predict(source=img, conf=self._segmentation_confidence, retina_masks = True, verbose=False)
 
         masksSk = None
         if len(predskin[0]) > 0:
